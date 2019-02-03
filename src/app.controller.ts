@@ -12,7 +12,7 @@ export class AppController {
 
   @Post()
   handleIncoming(@Res() res: any, @Body() body: JSON) {
-    res.status(HttpStatus.OK).send()
+    res.status(HttpStatus.OK).send();
     this.appService.processMessage(body);
   }
 }
