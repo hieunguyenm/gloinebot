@@ -71,6 +71,11 @@
     "@types/connect" "*"
     "@types/node" "*"
 
+"@types/btoa@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@types/btoa/-/btoa-1.2.0.tgz#b7c477f0b0171b0e0d6ccad0ddd9376a9e734d0d"
+  integrity sha512-mRkSzBQqmikda80QjYWhsM7beHu2zo6jqkbqn6YH3XpOeUiw+7qhRuKtDRKLR4/rPAt7KEV9Iy40NeY5KKUVmA==
+
 "@types/connect@*":
   version "3.4.32"
   resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.32.tgz#aa0e9616b9435ccad02bc52b5b454ffc2c70ba28"
@@ -693,6 +698,11 @@ bser@^2.0.0:
   integrity sha1-mseNPtXZFYBP2HrLFYvHlxR6Fxk=
   dependencies:
     node-int64 "^0.4.0"
+
+btoa@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/btoa/-/btoa-1.2.1.tgz#01a9909f8b2c93f6bf680ba26131eb30f7fa3d73"
+  integrity sha512-SB4/MIGlsiVkMcHmT+pSmIPoNDoHg+7cMzmt3Uxt628MTz2487DKSqK/fuhFBrkuqrYv5UCEnACpF4dTFNKc/g==
 
 buffer-from@1.x, buffer-from@^1.0.0, buffer-from@^1.1.0:
   version "1.1.1"

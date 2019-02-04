@@ -1,6 +1,5 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import axios from 'axios';
-import { addHours, differenceInHours, format, parse, subHours } from 'date-fns';
+import { getSenderID, extractBookingTimes, getDatetime, respondUnknown, respondNone, bookRoom } from './app.utils';
 
 @Injectable()
 export class AppService {
@@ -15,85 +14,17 @@ export class AppService {
   }
 
   processMessage(body: JSON) {
-    if (getSticker(body)) console.log(getSticker(body));
-    else if (getEntities(body) && getDatetime(body)) book(getSenderID(body), getDatetime(body));
+    const id = getSenderID(body);
+    const datetimes = getDatetime(body);
+    if (datetimes) {
+      let promises = [];
+      for (let i in datetimes) {
+        let request = extractBookingTimes(datetimes[i]);
+        promises.push(bookRoom(id, request.date, request.start, request.end));
+      }
+      Promise.all(promises)
+        .then(res => { if (res.every(r => r === false)) respondNone(id) });
+    }
     else respondUnknown(getSenderID(body));
   }
 }
-
-const book = (id: string, dates: JSON) => {
-  for (let i in dates) {
-    let parsedTime: any, length = 1;
-    if (dates[i]['type'] === 'value') {
-      const t = dates[i]['value'];
-      parsedTime = formatDatetime(t, t, addHours(t, length));
-    } else if (dates[i]['type'] === 'interval') {
-      const tFrom = parse(dates[i]['from']['value']);
-
-      // Subtract 1 hour because Messenger NLP says 2pm-5pm (3 hours) for messages like "2pm for 2 hours".
-      const tTo = subHours(parse(dates[i]['to']['value']), 1);
-
-      parsedTime = formatDatetime(tFrom, tFrom, tTo);
-      if (differenceInHours(tTo, tFrom) > 1) length = 2;
-    }
-    bookRoom(id, parsedTime.date, parsedTime.start, parsedTime.end);
-  }
-}
-
-const bookRoom = (id: string, date: string, start: number, end: number): Promise<void> =>
-  axios.get('https://gb.sixth.io/v1/rooms/all')
-    .then(res => {
-      if (date in res.data) {
-        let allRooms = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        for (let j in res.data[date]) {
-          const roomInfo = parseRoomInfo(res.data[date][j]);
-          if (checkOccupied(start, roomInfo.start, roomInfo.end)) allRooms.splice(roomInfo.room - 1, 1);
-        }
-
-        if (allRooms.length === 9) respond(id, `${date} ${start}:00-${end}:00 is available for all rooms.`);
-        else {
-          const availableRooms = allRooms.length > 0 ? allRooms.join(', ') : 'none';
-          respond(id, `${date} ${start}:00-${end}:00\nAvailable rooms: ${availableRooms}.`);
-        }
-      } else respond(id, `${date} ${start}:00-${end}:00 is available for all rooms.`);
-    })
-    .catch(() => console.log("Failed to query room bookings."));
-
-const formatDatetime = (dateTime: Date, startTime: Date, endTime: Date): any => {
-  return {
-    date: format(dateTime, 'D MMM YYYY'),
-    start: parseInt(format(startTime, 'HH')),
-    end: parseInt(format(endTime, 'HH'))
-  };
-}
-
-const parseRoomInfo = (d: JSON): any => {
-  const interval = d['time'].split('-');
-  const bookedStart = parseInt(interval[0].substring(0, 2));
-  const bookedEnd = parseInt(interval[1].substring(0, 2));
-  const roomNumber = d['room'];
-  return { start: bookedStart, end: bookedEnd, room: roomNumber };
-};
-
-const checkOccupied = (a: number, bStart: number, bEnd: number): boolean =>
-  Math.abs(a - bStart) === 1 && Math.abs(a - bEnd) === 1 || Math.abs(a - bStart) === 0;
-
-const getSticker = (data: JSON): JSON => data['entry'][0]['messaging'][0]['message']['sticker_id'];
-
-const getEntities = (data: JSON): JSON => data['entry'][0]['messaging'][0]['message']['nlp']['entities'];
-
-const getDatetime = (data: JSON): JSON => getEntities(data)['datetime'];
-
-const getSenderID = (data: JSON): string => data['entry'][0]['messaging'][0]['sender']['id'];
-
-const respondUnknown = (id: string) => respond(id, 'Sorry, I did not recognise your request.');
-
-const respond = (id: string, msg: string) =>
-  axios.post(`https://graph.facebook.com/v3.2/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
-    messaging_type: 'RESPONSE',
-    recipient: { id: id },
-    message: { text: msg }
-  })
-    .catch(() => console.log(`Failed to send response to user ${id}`));
-
-
