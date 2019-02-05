@@ -106,7 +106,7 @@ const respondConfirm = (id: string, room: number, start: number, end: number, _d
   respond(id,
     [`Confirm booking for `,
       `Room ${room}, `,
-      `${_date} ${start}:00-${end}:00\n`,
+      `${_date} @ ${start}:00-${end}:00\n`,
       `${url}/?d=${urlParams.slice(0, urlParams.length - 2)}`
     ].join(''));
 };
