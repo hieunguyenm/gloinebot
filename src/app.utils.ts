@@ -103,7 +103,12 @@ const respondConfirm = (id: string, room: number, start: number, end: number, _d
       `&m=${date.getMonth() + 1}`,
       `&y=${date.getFullYear() - new Date().getFullYear() + 1}`
     ].join(''));
-  respond(id, `Confirm booking for Room ${room}, ${_date} ${start}:00-${end}:00\n${url}/?d=${urlParams}`);
+  respond(id,
+    [`Confirm booking for `,
+      `Room ${room}, `,
+      `${_date} ${start}:00-${end}:00\n`,
+      `${url}/?d=${urlParams.slice(0, urlParams.length - 2)}`
+    ].join(''));
 };
 
 const respond = (id: string, msg: string) =>
@@ -113,9 +118,3 @@ const respond = (id: string, msg: string) =>
     message: { text: msg }
   })
     .catch(() => console.log(`Failed to send response to user ${id}`));
-
-const removeIth = <T>(array: T[], index: number): T[] => {
-  return index >= 0 && index < array.length ? [...array.slice(0, index), ...array.slice(index + 1)] : array;
-};
-
-
