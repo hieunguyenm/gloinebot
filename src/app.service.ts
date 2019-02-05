@@ -1,5 +1,11 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import { getSenderID, extractBookingTimes, getDatetime, respondUnknown, respondNone, bookRoom } from './app.utils';
+import {
+  getSenderID,
+  getDatetime,
+  respondUnknown,
+  respondNone,
+  iterateRequest
+} from './app.utils';
 
 @Injectable()
 export class AppService {
@@ -16,15 +22,7 @@ export class AppService {
   processMessage(body: JSON) {
     const id = getSenderID(body);
     const datetimes = getDatetime(body);
-    if (datetimes) {
-      let promises = [];
-      for (let i in datetimes) {
-        let request = extractBookingTimes(datetimes[i]);
-        promises.push(bookRoom(id, request.date, request.start, request.end));
-      }
-      Promise.all(promises)
-        .then(res => { if (res.every(r => r === false)) respondNone(id) });
-    }
+    if (datetimes) iterateRequest(datetimes, id).then(successful => { if (!successful) respondNone(id) });
     else respondUnknown(getSenderID(body));
   }
 }

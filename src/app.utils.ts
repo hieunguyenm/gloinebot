@@ -1,4 +1,10 @@
-import { addHours, differenceInHours, format, parse, subHours } from 'date-fns';
+import {
+  addHours,
+  differenceInHours,
+  format,
+  parse,
+  subHours
+} from 'date-fns';
 import axios from 'axios';
 
 interface IParsedDate {
@@ -9,7 +15,26 @@ interface IParsedDate {
 
 export const getSenderID = (data: JSON): string => data['entry'][0]['messaging'][0]['sender']['id'];
 
-export const extractBookingTimes = (date: JSON): IParsedDate => {
+export const iterateRequest = async (datetimes: JSON, id: string): Promise<boolean> => {
+  for (let i in datetimes) {
+    let times = extractBookingTimes(datetimes[i]);
+    let rooms = await filterOccupied(times.date, times.start)
+    if (rooms.length > 0) { bookRoom(id, rooms, times.date, times.start, times.end); return true; }
+  }
+  return false;
+}
+
+export const getDatetime = (data: JSON): JSON => {
+  try {
+    return data['entry'][0]['messaging'][0]['message']['nlp']['entities']['datetime'];
+  } catch {
+    return null;
+  }
+};
+
+const allRooms = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+const extractBookingTimes = (date: JSON): IParsedDate => {
   let parsedTime: IParsedDate, duration = 1;
   if (date['type'] === 'value') {
     const t = date['value'];
@@ -26,44 +51,23 @@ export const extractBookingTimes = (date: JSON): IParsedDate => {
   return parsedTime;
 }
 
-export const bookRoom = (id: string, date: string, start: number, end: number): Promise<boolean> =>
+const filterOccupied = async (date: string, start: number): Promise<number[]> =>
   axios.get('https://gb.sixth.io/v1/rooms/all')
     .then(res => {
-      if (date in res.data) {
-        const availableRooms =
-          [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(roomIndex => {
-            let available = true;
-            res.data[date].some(r => {
-              const roomInfo = parseRoomInfo(r);
-              if (roomInfo.room === roomIndex && isOccupied(start, roomInfo.start, roomInfo.end)) {
-                available = false;
-                return false;
-              }
-            });
-            return available;
-          });
-
-        if (availableRooms.length === 1) { respondConfirm(id, availableRooms[0], start, end, date); return true; }
-        else if (availableRooms.length > 1) {
-          respondConfirm(id, availableRooms.find(e => e !== 4), start, end, date);
-          return true;
-        }
-        return false;
-      } else { respondConfirm(id, 1, start, end, date); return true; }
+      if (date in res.data) return allRooms.filter(roomIndex => {
+        return res.data[date].every(r => {
+          const roomInfo = parseRoomInfo(r);
+          return !(roomInfo.room === roomIndex && isOccupied(start, roomInfo.start, roomInfo.end));
+        });
+      });
+      return allRooms;
     })
-    .then(status => { return status })
-    .catch(e => {
-      console.log(e);
-      return false;
-    });
+    .catch(e => { console.log(e); return []; });
 
-export const getDatetime = (data: JSON): JSON => {
-  try {
-    return data['entry'][0]['messaging'][0]['message']['nlp']['entities']['datetime'];
-  } catch {
-    return null;
-  }
-};
+const bookRoom = (id: string, rooms: number[], date: string, start: number, end: number) => {
+  if (rooms.length === 1) { respondConfirm(id, rooms[0], start, end, date); return true; }
+  else respondConfirm(id, rooms.find(e => e !== 4), start, end, date);
+}
 
 export const respondNone = (id: string) => respond(id, 'Sorry, there are no rooms available at this time.');
 
