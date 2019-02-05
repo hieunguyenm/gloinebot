@@ -108,10 +108,11 @@ const respondConfirm = (id: string, room: number, start: number, end: number, _d
       `&y=${date.getFullYear() - new Date().getFullYear() + 1}`
     ].join(''));
   respond(id,
-    [`Click link to confirm booking for `,
+    [
       `Room ${room}, `,
       `${_date} @ ${start}:00-${end}:00\n`,
-      `${url}/?d=${urlParams}`
+      `${url}/?d=${urlParams}\n\n`,
+      `Click link to confirm booking.`
     ].join(''));
 };
 
