@@ -72,7 +72,11 @@ const bookRoom = (id: string, rooms: number[], date: string, start: number, end:
 export const respondNone = (id: string) => respond(id, 'Sorry, there are no rooms available at this time.');
 
 export const respondUnknown = (id: string) => respond(id,
-  'Give me a time and I will try find a glassroom for you! See https://gloinebot.sixth.io for examples.'
+  [
+    `Give me a time like "4pm" and I will try find a glassroom for you!\n`,
+    `You can also give me an interval like "4pm for 2 hours" as well!\n`,
+    `See https://gloinebot.sixth.io for examples.`,
+  ].join('')
 );
 
 const btoa = (str: string): string => Buffer.from(str).toString('base64');
