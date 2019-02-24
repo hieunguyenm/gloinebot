@@ -44,7 +44,7 @@ const extractBookingTimes = (date: JSON): IParsedDate => {
 
     // Subtract 1 hour because Messenger NLP says 2pm-5pm (3 hours) for messages like "2pm for 2 hours".
     let tTo = subHours(parse(date['to']['value']), 1);
-    duration = Math.min(differenceInHours(tTo, tFrom), 2);
+    duration = Math.max(Math.min(differenceInHours(tTo, tFrom), 2), 1);
     tTo = addHours(tFrom, duration);
     parsedTime = formatDatetime(tFrom, tFrom, tTo);
   }
