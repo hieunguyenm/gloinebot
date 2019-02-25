@@ -1,5 +1,7 @@
 # Gloinebot
 
+[![Build Status](https://travis-ci.com/hieunguyenm/gloinebot.svg?token=4fyteKTQy3uDiKsqt3Kb&branch=master)](https://travis-ci.com/hieunguyenm/gloinebot)
+
 Book SCSS Glassrooms via Messenger using Facebook Messenger NLP
 
 ## Installation
