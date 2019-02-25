@@ -114,7 +114,7 @@ const respondConfirm = (id: string, room: number, start: number, end: number, _d
       `&d=${date.getDate()}`,
       `&m=${date.getMonth() + 1}`,
       `&y=${date.getFullYear() - new Date().getFullYear() + 1}`
-    ].join(''));
+    ].join('')).replace(/==$/, '');
   respond(id,
     [
       `Room ${room}, `,
