@@ -15,6 +15,8 @@ interface IParsedDate {
 
 export const getSenderID = (data: JSON): string => data['entry'][0]['messaging'][0]['sender']['id'];
 
+export const hasSticker = (data: JSON): boolean => data['entry'][0]['messaging'][0]['message']['sticker_id'];
+
 export const iterateRequest = async (datetimes: JSON, id: string): Promise<boolean> => {
   for (let i in datetimes) {
     let times = extractBookingTimes(datetimes[i]);

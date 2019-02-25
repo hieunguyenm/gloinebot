@@ -2,9 +2,10 @@ import { Injectable, HttpStatus } from '@nestjs/common';
 import {
   getSenderID,
   getDatetime,
+  hasSticker,
+  iterateRequest,
   respondUnknown,
   respondNone,
-  iterateRequest
 } from './app.utils';
 
 @Injectable()
@@ -23,6 +24,6 @@ export class AppService {
     const id = getSenderID(body);
     const datetimes = getDatetime(body);
     if (datetimes) iterateRequest(datetimes, id).then(successful => { if (!successful) respondNone(id) });
-    else respondUnknown(getSenderID(body));
+    else if (!hasSticker(body)) respondUnknown(getSenderID(body));
   }
 }
