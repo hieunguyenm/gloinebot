@@ -12,6 +12,9 @@ export class AppController {
 
   @Post()
   handleIncoming(@Res() res: any, @Body() body: JSON) {
+    // Messenger API expects acknowledgement of HTTP 200 for all payloads,
+    // otherwise Facebook will start delay-queueing future messages.
+    // Send HTTP 200 acknowledgement first, process payload after.
     res.status(HttpStatus.OK).send();
     this.appService.processMessage(body);
   }
