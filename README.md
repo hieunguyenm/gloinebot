@@ -1,6 +1,6 @@
 # Gloinebot
 
-Book SCSS Glassrooms via Messenger using Facebook Messenger NLP.
+Book SCSS Glassrooms via Messenger using Facebook Messenger NLP
 
 ## Installation
 
