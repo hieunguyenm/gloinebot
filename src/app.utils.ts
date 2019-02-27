@@ -152,26 +152,39 @@ const respondConfirm = (id: string, room: number, start: number, end: number, _d
     ].join(''));
 };
 
-const respondButtonTemplate = (id: string, room: number[], start: number, end: number, date: string) => {
+const split = (list: any, size: number) =>
+  list.reduce((acc, curr, i, self) => {
+    if (!(i % size)) {
+      return [...acc, self.slice(i, i + size)];
+    }
+    return acc;
+  }, []);
+
+const generateButtonSets = (room: number[], start: number, end: number, date: string): number[][] => {
   const roomButtons = room.map(room => ({
     type: 'web_url',
     url: generateConfirmURL(room, start, end, date),
     title: `Room ${room}`,
   }));
-  axios.post(API_URL, {
-    recipient: { id: id },
-    message: {
-      attachment: {
-        type: 'template',
-        payload: {
-          template_type: 'button',
-          text: `${date} @ ${start}:00-${end}:00`,
-          buttons: roomButtons,
+  return split(roomButtons, 3);
+};
+
+const respondButtonTemplate = (id: string, room: number[], start: number, end: number, date: string) => {
+  generateButtonSets(room, start, end, date).forEach(async e =>
+    await axios.post(API_URL, {
+      recipient: { id: id },
+      message: {
+        attachment: {
+          type: 'template',
+          payload: {
+            template_type: 'button',
+            text: `${date} @ ${start}:00-${end}:00`,
+            buttons: e,
+          },
         },
       },
-    },
-  })
-    .catch(() => console.log(`Failed to send response to user ${id}`));
+    })
+      .catch(e => console.log(`Failed to send response to user ${id}: ${e}`)));
 };
 
 const respond = (id: string, msg: string) =>
