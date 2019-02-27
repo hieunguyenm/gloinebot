@@ -78,8 +78,8 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
     .catch(e => { console.log(e); return []; });
 
 const bookRoom = (id: string, rooms: number[], wanted: number, date: string, start: number, end: number) => {
-  if (rooms.every(e => e != wanted)) respondAlternative(id, wanted, rooms);
-  else if (rooms.length === 1) respondConfirm(id, rooms[0], start, end, date);
+  if (rooms.every(e => e != wanted)) { respondAlternative(id, wanted, rooms); return true; }
+  else if (rooms.length === 1) { respondConfirm(id, rooms[0], start, end, date); return true; }
   else respondConfirm(id, rooms.find(e => e !== 4), start, end, date);
 }
 

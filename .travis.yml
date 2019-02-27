@@ -3,3 +3,12 @@ node_js:
   - 'node'
 script:
   - yarn run prestart:prod
+notifications:
+  webhooks:
+    urls:
+      - https://build-gloinebot.b0rk.it/notifications
+    on_success: always
+    on_failure: never
+    on_start: never
+    on_cancel: never
+    on_error: never
