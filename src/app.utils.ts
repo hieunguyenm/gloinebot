@@ -41,13 +41,10 @@ export const getDatetime = (data: JSON): JSON => {
 const ROOM_REGEX = /room\s?(number)?(no\.?)?\s?(\d)/;
 
 export const extractRoomWanted = (data: JSON): number | null => {
-  let wantedRoom: number;
-  try {
-    wantedRoom = parseInt(getMessage(data).match(ROOM_REGEX)[3]);
-  } catch (e) {
-    return null;
-  }
-  return (wantedRoom > 0 && wantedRoom < 10) ? wantedRoom : null;
+  const roomData = getMessage(data).match(ROOM_REGEX);
+  const wanted = (roomData) ? parseInt(roomData[3]) : null;
+  if (wanted && wanted > 0 && wanted < 10) return wanted;
+  return null;
 };
 
 const allRooms = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -82,10 +79,10 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
     })
     .catch(e => { console.log(e); return []; });
 
-const bookRoom = (id: string, rooms: number[], wanted: number, date: string, start: number, end: number) => {
-  if (wanted !== null && rooms.every(e => e != wanted)) respondAlternative(id, wanted, rooms);
+const bookRoom = (id: string, rooms: number[], wanted: number | null, date: string, start: number, end: number) => {
+  if (wanted !== null && rooms.every(e => e !== wanted)) respondAlternative(id, wanted, rooms);
   else if (rooms.length === 1) respondConfirm(id, rooms[0], start, end, date);
-  else respondConfirm(id, rooms.find(e => e !== 4), start, end, date);
+  else respondConfirm(id, wanted || rooms.find(e => e !== 4), start, end, date);
 }
 
 export const respondNone = (id: string) => respond(id, 'Sorry, there are no rooms available at this time.');
