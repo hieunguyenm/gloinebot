@@ -1,11 +1,12 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import {
-  getSenderID,
+  extractRoomWanted,
   getDatetime,
+  getSenderID,
   hasSticker,
   iterateRequest,
-  respondUnknown,
   respondNone,
+  respondUnknown,
 } from './app.utils';
 
 @Injectable()
@@ -23,7 +24,9 @@ export class AppService {
   processMessage(body: JSON) {
     const id = getSenderID(body);
     const datetimes = getDatetime(body);
-    if (datetimes) iterateRequest(datetimes, id).then(successful => { if (!successful) respondNone(id) });
+    const wantedRoom = extractRoomWanted(body);
+    if (datetimes) iterateRequest(datetimes, id, wantedRoom)
+      .then(successful => { if (!successful) respondNone(id) });
     else if (!hasSticker(body)) respondUnknown(getSenderID(body));
   }
 }

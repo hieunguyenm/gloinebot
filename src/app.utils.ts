@@ -5,6 +5,7 @@ import {
   parse,
   subHours
 } from 'date-fns';
+
 import axios from 'axios';
 
 interface IParsedDate {
@@ -17,7 +18,10 @@ export const getSenderID = (data: JSON): string => data['entry'][0]['messaging']
 
 export const hasSticker = (data: JSON): boolean => data['entry'][0]['messaging'][0]['message']['sticker_id'];
 
-export const iterateRequest = async (datetimes: JSON, id: string): Promise<boolean> => {
+export const getMessage = (data: JSON): string => data['entry'][0]['messaging'][0]['message']['text'];
+
+export const iterateRequest =
+  async (datetimes: JSON, id: string, wantedRoom: number): Promise<boolean> => {
   for (let i in datetimes) {
     let times = extractBookingTimes(datetimes[i]);
     let rooms = await filterOccupied(times.date, times.start)
@@ -32,6 +36,13 @@ export const getDatetime = (data: JSON): JSON => {
   } catch {
     return null;
   }
+};
+
+const ROOM_REGEX = /room\s?(number)?(no\.?)?\s?(\d)/;
+
+export const extractRoomWanted = (data: JSON): number | null => {
+  const wantedRoom = parseInt(getMessage(data).match(ROOM_REGEX)[3]);
+  return (wantedRoom > 0 && wantedRoom < 10) ? wantedRoom : null;
 };
 
 const allRooms = [1, 2, 3, 4, 5, 6, 7, 8, 9];
