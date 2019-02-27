@@ -1,0 +1,8 @@
+Semi-group (A, *)
+Monoid (A, *, i)
+Group(A, *, e)
+
+Monad(A, *, unit)
+
+unit a -> m a
+m a * (a -> b) -> m b

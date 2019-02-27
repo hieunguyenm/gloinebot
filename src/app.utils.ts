@@ -42,19 +42,18 @@ const ROOM_REGEX = /room\s?(number)?(no\.?)?\s?(\d)/;
 
 const CONFIRM_URL = 'https://confirm-gloinebot.now.sh';
 
+const allRooms = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
 const apiURL = () => [
   `https://graph.facebook.com/v3.2/me/messages?access_token=`,
   `${process.env.PAGE_ACCESS_TOKEN}`
 ].join('');
 
 export const extractRoomWanted = (data: JSON): number | null => {
-  const roomData = getMessage(data).match(ROOM_REGEX);
+  const roomData = getMessage(data).toLowerCase().match(ROOM_REGEX);
   const wanted = (roomData) ? parseInt(roomData[3]) : null;
-  if (wanted && wanted > 0 && wanted < 10) return wanted;
-  return null;
+  return (wanted && wanted > 0 && wanted < 10) ? wanted : null;
 };
-
-const allRooms = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const extractBookingTimes = (date: JSON): IParsedDate => {
   let parsedTime: IParsedDate, duration = 1;
@@ -89,18 +88,17 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
 const bookRoom = (id: string, rooms: number[], wanted: number | null, date: string, start: number, end: number) => {
   if (wanted !== null && rooms.every(e => e !== wanted))
     respondAlternative(id, wanted, rooms, start, end, date);
-  else if (rooms.length === 1) respondConfirm(id, rooms[0], start, end, date);
-  else respondButtonTemplate(id, wanted ? [wanted] : rooms || rooms, start, end, date);
+  else respondButtonTemplate(id, wanted ? [wanted] : rooms, start, end, date);
 }
 
 export const respondNone = (id: string) => respond(id, 'Sorry, there are no rooms available at this time.');
 
 export const respondUnknown = (id: string) => respond(id,
   [
-    `Give me a time like "4pm" and I will try find a glassroom for you!\n`,
-    `You can also give me an interval like "4pm for 2 hours" as well!\n`,
+    `Give me a time like "4pm" and I will try find a glassroom for you!`,
+    `You can also give me an interval like "4pm for 2 hours" as well!`,
     `See https://gloinebot.sixth.io for examples.`,
-  ].join('')
+  ].join('\n')
 );
 
 const btoa = (str: string): string => Buffer.from(str).toString('base64');
@@ -178,7 +176,7 @@ const respondButtonTemplate = async (id: string, rooms: number[], start: number,
   const buttons = generateButtonSets(rooms, start, end, date);
   for (let e of buttons) {
     await axios.post(apiURL(), {
-      recipient: { id: id },
+      recipient: { id },
       message: {
         attachment: {
           type: 'template',
