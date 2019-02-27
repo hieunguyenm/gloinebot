@@ -21,14 +21,14 @@ export const hasSticker = (data: JSON): boolean => data['entry'][0]['messaging']
 export const getMessage = (data: JSON): string => data['entry'][0]['messaging'][0]['message']['text'];
 
 export const iterateRequest =
-  async (datetimes: JSON, id: string, wantedRoom: number): Promise<boolean> => {
-  for (let i in datetimes) {
-    let times = extractBookingTimes(datetimes[i]);
-    let rooms = await filterOccupied(times.date, times.start)
-    if (rooms.length > 0) { bookRoom(id, rooms, times.date, times.start, times.end); return true; }
+  async (datetimes: JSON, id: string, wanted: number): Promise<boolean> => {
+    for (let i in datetimes) {
+      let times = extractBookingTimes(datetimes[i]);
+      let rooms = await filterOccupied(times.date, times.start)
+      if (rooms.length > 0) { bookRoom(id, rooms, wanted, times.date, times.start, times.end); return true; }
+    }
+    return false;
   }
-  return false;
-}
 
 export const getDatetime = (data: JSON): JSON => {
   try {
@@ -68,7 +68,7 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
   axios.get('https://gb.sixth.io/v1/rooms/all')
     .then(res => {
       if (date in res.data) return allRooms.filter(roomIndex => {
-        return res.data[date].every(r => {
+        return res.data[date].every((r: any) => {
           const roomInfo = parseRoomInfo(r);
           return !(roomInfo.room === roomIndex && isOccupied(start, roomInfo.start, roomInfo.end));
         });
@@ -77,8 +77,9 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
     })
     .catch(e => { console.log(e); return []; });
 
-const bookRoom = (id: string, rooms: number[], date: string, start: number, end: number) => {
-  if (rooms.length === 1) { respondConfirm(id, rooms[0], start, end, date); return true; }
+const bookRoom = (id: string, rooms: number[], wanted: number, date: string, start: number, end: number) => {
+  if (rooms.every(e => e != wanted)) respondAlternative(id, wanted, rooms);
+  else if (rooms.length === 1) respondConfirm(id, rooms[0], start, end, date);
   else respondConfirm(id, rooms.find(e => e !== 4), start, end, date);
 }
 
@@ -113,6 +114,13 @@ const parseRoomInfo = (d: JSON): any => {
 const isOccupied = (aStart: number, bStart: number, bEnd: number): boolean =>
   Math.abs(aStart - bStart) === 1 && Math.abs(aStart - bEnd) === 1 ||
   Math.abs(aStart - bStart) === 0;
+
+const respondAlternative = (id: string, wanted: number, rooms: number[]) => {
+  respond(id, [
+    `Room ${wanted} is not available for this time.`,
+    `These other rooms are available: ${rooms.join(', ')}`,
+  ].join('\n'));
+};
 
 const respondConfirm = (id: string, room: number, start: number, end: number, _date: string) => {
   const date = new Date(_date);
