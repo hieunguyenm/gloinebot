@@ -41,7 +41,12 @@ export const getDatetime = (data: JSON): JSON => {
 const ROOM_REGEX = /room\s?(number)?(no\.?)?\s?(\d)/;
 
 export const extractRoomWanted = (data: JSON): number | null => {
-  const wantedRoom = parseInt(getMessage(data).match(ROOM_REGEX)[3]);
+  let wantedRoom: number;
+  try {
+    wantedRoom = parseInt(getMessage(data).match(ROOM_REGEX)[3]);
+  } catch (e) {
+    return null;
+  }
   return (wantedRoom > 0 && wantedRoom < 10) ? wantedRoom : null;
 };
 
@@ -78,8 +83,8 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
     .catch(e => { console.log(e); return []; });
 
 const bookRoom = (id: string, rooms: number[], wanted: number, date: string, start: number, end: number) => {
-  if (rooms.every(e => e != wanted)) { respondAlternative(id, wanted, rooms); return true; }
-  else if (rooms.length === 1) { respondConfirm(id, rooms[0], start, end, date); return true; }
+  if (wanted !== null && rooms.every(e => e != wanted)) respondAlternative(id, wanted, rooms);
+  else if (rooms.length === 1) respondConfirm(id, rooms[0], start, end, date);
   else respondConfirm(id, rooms.find(e => e !== 4), start, end, date);
 }
 
