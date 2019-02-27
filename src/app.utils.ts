@@ -40,12 +40,9 @@ export const getDatetime = (data: JSON): JSON => {
 
 const ROOM_REGEX = /room\s?(number)?(no\.?)?\s?(\d)/;
 
-const CONFIRM_URL = 'https://confirm-gloinebot.now.sh';
+const API_URL = `https://graph.facebook.com/v3.2/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`;
 
-const apiURL = () => [
-  `https://graph.facebook.com/v3.2/me/messages?access_token=`,
-  `${process.env.PAGE_ACCESS_TOKEN}`
-].join('');
+const CONFIRM_URL = 'https://confirm-gloinebot.now.sh';
 
 export const extractRoomWanted = (data: JSON): number | null => {
   const roomData = getMessage(data).match(ROOM_REGEX);
@@ -87,10 +84,10 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
     .catch(e => { console.log(e); return []; });
 
 const bookRoom = (id: string, rooms: number[], wanted: number | null, date: string, start: number, end: number) => {
-  if (wanted !== null && rooms.every(e => e !== wanted))
-    respondAlternative(id, wanted, rooms, start, end, date);
+  if (wanted !== null && rooms.every(e => e !== wanted)) respondAlternative(id, wanted, rooms);
   else if (rooms.length === 1) respondConfirm(id, rooms[0], start, end, date);
-  else respondButtonTemplate(id, wanted ? [wanted] : rooms || rooms, start, end, date);
+  else respondButtonTemplate(id, rooms, start, end, date);
+  // else respondConfirm(id, wanted || rooms.find(e => e !== 4), start, end, date);
 }
 
 export const respondNone = (id: string) => respond(id, 'Sorry, there are no rooms available at this time.');
@@ -125,14 +122,12 @@ const isOccupied = (aStart: number, bStart: number, bEnd: number): boolean =>
   Math.abs(aStart - bStart) === 1 && Math.abs(aStart - bEnd) === 1 ||
   Math.abs(aStart - bStart) === 0;
 
-const respondAlternative =
-  (id: string, wanted: number, rooms: number[], start: number, end: number, date: string) => {
-    respond(id, [
-      `Room ${wanted} is not available for this time.`,
-      `These other rooms are available:`,
-    ].join('\n'));
-    respondButtonTemplate(id, rooms, start, end, date);
-  };
+const respondAlternative = (id: string, wanted: number, rooms: number[]) => {
+  respond(id, [
+    `Room ${wanted} is not available for this time.`,
+    `These other rooms are available: ${rooms.join(', ')}`,
+  ].join('\n'));
+};
 
 const generateConfirmURL = (room: number, start: number, end: number, _date: string) => {
   const date = new Date(_date);
@@ -165,8 +160,8 @@ const split = (list: any, size: number) =>
     return acc;
   }, []);
 
-const generateButtonSets = (rooms: number[], start: number, end: number, date: string): number[][] => {
-  const roomButtons = rooms.map(room => ({
+const generateButtonSets = (room: number[], start: number, end: number, date: string): number[][] => {
+  const roomButtons = room.map(room => ({
     type: 'web_url',
     url: generateConfirmURL(room, start, end, date),
     title: `Room ${room}`,
@@ -174,10 +169,9 @@ const generateButtonSets = (rooms: number[], start: number, end: number, date: s
   return split(roomButtons, 3);
 };
 
-const respondButtonTemplate = async (id: string, rooms: number[], start: number, end: number, date: string) => {
-  const buttons = generateButtonSets(rooms, start, end, date);
-  for (let e of buttons) {
-    await axios.post(apiURL(), {
+const respondButtonTemplate = (id: string, room: number[], start: number, end: number, date: string) => {
+  generateButtonSets(room, start, end, date).forEach(async e =>
+    await axios.post(API_URL, {
       recipient: { id: id },
       message: {
         attachment: {
@@ -190,12 +184,11 @@ const respondButtonTemplate = async (id: string, rooms: number[], start: number,
         },
       },
     })
-      .catch(e => console.log(`Failed to send response to user ${id}: ${e}`))
-  }
+      .catch(e => console.log(`Failed to send response to user ${id}: ${e}`)));
 };
 
 const respond = (id: string, msg: string) =>
-  axios.post(apiURL(), {
+  axios.post(API_URL, {
     messaging_type: 'RESPONSE',
     recipient: { id: id },
     message: { text: msg }
