@@ -72,7 +72,7 @@ export const formatDatetime = (dateTime: Date, startTime: Date, endTime: Date): 
 }
 
 const toDateObj = (bookingDate: IParsedDate): Date =>
-  setHours(parse(bookingDate.date), bookingDate.start);
+  setHours(new Date(bookingDate.date), bookingDate.start);
 
 export const parseRoomInfo = (d: JSON): any => {
   const interval = d['time'].split('-');
