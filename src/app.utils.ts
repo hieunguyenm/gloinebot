@@ -14,6 +14,12 @@ interface IParsedDate {
   end: number;
 };
 
+interface IMessengerButton {
+  type: string;
+  url: string;
+  title: string;
+}
+
 export const getSenderID = (data: JSON): string => data['entry'][0]['messaging'][0]['sender']['id'];
 
 export const hasSticker = (data: JSON): boolean => data['entry'][0]['messaging'][0]['message']['sticker_id'];
@@ -40,14 +46,20 @@ export const getDatetime = (data: JSON): JSON => {
 
 const ROOM_REGEX = /room\s?(number)?(no\.?)?\s?(\d)/;
 
-export const extractRoomWanted = (data: JSON): number | null => {
-  const roomData = getMessage(data).match(ROOM_REGEX);
-  const wanted = (roomData) ? parseInt(roomData[3]) : null;
-  if (wanted && wanted > 0 && wanted < 10) return wanted;
-  return null;
-};
+const CONFIRM_URL = 'https://confirm-gloinebot.now.sh';
 
 const allRooms = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+const apiURL = () => [
+  `https://graph.facebook.com/v3.2/me/messages?access_token=`,
+  `${process.env.PAGE_ACCESS_TOKEN}`
+].join('');
+
+export const extractRoomWanted = (data: JSON): number | null => {
+  const roomData = getMessage(data).toLowerCase().match(ROOM_REGEX);
+  const wanted = (roomData) ? parseInt(roomData[3]) : null;
+  return (wanted && wanted > 0 && wanted < 10) ? wanted : null;
+};
 
 const extractBookingTimes = (date: JSON): IParsedDate => {
   let parsedTime: IParsedDate, duration = 1;
@@ -80,19 +92,19 @@ const filterOccupied = async (date: string, start: number): Promise<number[]> =>
     .catch(e => { console.log(e); return []; });
 
 const bookRoom = (id: string, rooms: number[], wanted: number | null, date: string, start: number, end: number) => {
-  if (wanted !== null && rooms.every(e => e !== wanted)) respondAlternative(id, wanted, rooms);
-  else if (rooms.length === 1) respondConfirm(id, rooms[0], start, end, date);
-  else respondConfirm(id, wanted || rooms.find(e => e !== 4), start, end, date);
+  if (wanted !== null && rooms.every(e => e !== wanted))
+    respondAlternative(id, wanted, rooms, start, end, date);
+  else respondButtonTemplate(id, wanted ? [wanted] : rooms, start, end, date);
 }
 
 export const respondNone = (id: string) => respond(id, 'Sorry, there are no rooms available at this time.');
 
 export const respondUnknown = (id: string) => respond(id,
   [
-    `Give me a time like "4pm" and I will try find a glassroom for you!\n`,
-    `You can also give me an interval like "4pm for 2 hours" as well!\n`,
+    `Give me a time like "4pm" and I will try find a glassroom for you!`,
+    `You can also give me an interval like "4pm for 2 hours" as well!`,
     `See https://gloinebot.sixth.io for examples.`,
-  ].join('')
+  ].join('\n')
 );
 
 const btoa = (str: string): string => Buffer.from(str).toString('base64');
@@ -117,17 +129,18 @@ const isOccupied = (aStart: number, bStart: number, bEnd: number): boolean =>
   Math.abs(aStart - bStart) === 1 && Math.abs(aStart - bEnd) === 1 ||
   Math.abs(aStart - bStart) === 0;
 
-const respondAlternative = (id: string, wanted: number, rooms: number[]) => {
-  respond(id, [
-    `Room ${wanted} is not available for this time.`,
-    `These other rooms are available: ${rooms.join(', ')}`,
-  ].join('\n'));
-};
+const respondAlternative =
+  (id: string, wanted: number, rooms: number[], start: number, end: number, date: string) => {
+    respond(id, [
+      `Room ${wanted} is not available for this time.`,
+      `These other rooms are available:`,
+    ].join('\n'));
+    respondButtonTemplate(id, rooms, start, end, date);
+  };
 
-const respondConfirm = (id: string, room: number, start: number, end: number, _date: string) => {
+const generateConfirmURL = (room: number, start: number, end: number, _date: string) => {
   const date = new Date(_date);
-  const url = 'https://confirm-gloinebot.now.sh';
-  const urlParams = btoa(
+  return `${CONFIRM_URL}/?d=` + btoa(
     [
       `st=${start + 1}`,
       `&et=${end + 1}`,
@@ -136,19 +149,57 @@ const respondConfirm = (id: string, room: number, start: number, end: number, _d
       `&m=${date.getMonth() + 1}`,
       `&y=${date.getFullYear() - new Date().getFullYear() + 1}`
     ].join('')).replace(/==$/, '');
+}
+
+const respondConfirm = (id: string, room: number, start: number, end: number, _date: string) => {
   respond(id,
     [
       `Room ${room}, `,
       `${_date} @ ${start}:00-${end}:00\n`,
-      `${url}/?d=${urlParams}\n\n`,
+      `${generateConfirmURL(room, start, end, _date)}\n\n`,
       `Click link to confirm booking.`
     ].join(''));
 };
 
+const split = <T>(list: T[], size: number): T[][] =>
+  list.reduce((acc, _, i, self) =>
+    !(i % size) ?
+      [...acc, self.slice(i, i + size)] :
+      acc,
+    []);
+
+const generateButtonSets =
+  (rooms: number[], start: number, end: number, date: string): IMessengerButton[][] => {
+    const roomButtons = rooms.map(room => ({
+      type: 'web_url',
+      url: generateConfirmURL(room, start, end, date),
+      title: `Book room ${room}`,
+    }));
+    return split(roomButtons, 3);
+  };
+
+const respondButtonTemplate = async (id: string, rooms: number[], start: number, end: number, date: string) => {
+  const buttonSets = generateButtonSets(rooms, start, end, date);
+  for (let e of buttonSets) {
+    await axios.post(apiURL(), {
+      recipient: { id },
+      message: {
+        attachment: {
+          type: 'template',
+          payload: {
+            template_type: 'button',
+            text: `${date} @ ${start}:00-${end}:00`,
+            buttons: e,
+          },
+        },
+      },
+    }).catch(e => console.log(`Failed to send response to user ${id}: ${e}`))
+  }
+};
+
 const respond = (id: string, msg: string) =>
-  axios.post(`https://graph.facebook.com/v3.2/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+  axios.post(apiURL(), {
     messaging_type: 'RESPONSE',
     recipient: { id: id },
     message: { text: msg }
-  })
-    .catch(() => console.log(`Failed to send response to user ${id}`));
+  }).catch(e => console.log(`Failed to send response to user ${id}: ${e}`));
