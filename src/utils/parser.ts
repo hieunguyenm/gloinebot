@@ -5,7 +5,10 @@ import {
   differenceInHours,
   format,
   parse,
-  subHours
+  subHours,
+  setHours,
+  isBefore,
+  startOfHour,
 } from 'date-fns';
 
 import { getMessage } from './extractor';
@@ -29,12 +32,13 @@ export const extractRoomWanted = (data: JSON): number | null => {
   return (wanted && wanted > 0 && wanted < 10) ? wanted : null;
 };
 
-export const extractBookingTimes = (date: JSON): IParsedDate => {
+export const extractBookingTimes = (date: JSON): IParsedDate | null => {
   let parsedTime: IParsedDate, duration = 1;
   if (date['type'] === 'value') {
+    if (isNaN(new Date(date['value']).valueOf())) return null;
     const t = date['value'];
     parsedTime = formatDatetime(t, t, addHours(t, duration));
-  } else if (date['type'] === 'interval') {
+  } else if (date['type'] === 'interval' && date['from'] && date['to']) {
     const tFrom = parse(date['from']['value']);
 
     // Subtract 1 hour because Messenger NLP says 2pm-5pm (3 hours) for messages like "2pm for 2 hours".
@@ -42,8 +46,8 @@ export const extractBookingTimes = (date: JSON): IParsedDate => {
     duration = Math.max(Math.min(differenceInHours(tTo, tFrom), 2), 1);
     tTo = addHours(tFrom, duration);
     parsedTime = formatDatetime(tFrom, tFrom, tTo);
-  }
-  return parsedTime;
+  } else return null;
+  return isBefore(toDateObj(parsedTime), startOfHour(Date.now())) ? null : parsedTime;
 }
 
 export const filterOccupied = async (date: string, start: number): Promise<number[]> =>
@@ -66,6 +70,9 @@ export const formatDatetime = (dateTime: Date, startTime: Date, endTime: Date): 
     end: parseInt(format(endTime, 'HH'))
   };
 }
+
+const toDateObj = (bookingDate: IParsedDate): Date =>
+  setHours(new Date(bookingDate.date), bookingDate.start);
 
 export const parseRoomInfo = (d: JSON): any => {
   const interval = d['time'].split('-');
