@@ -32,7 +32,7 @@ export const extractRoomWanted = (data: JSON): number | null => {
 export const extractBookingTimes = (date: JSON): IParsedDate | null => {
   let parsedTime: IParsedDate, duration = 1;
   if (date['type'] === 'value') {
-    if (!isNaN(new Date(date['value']).valueOf())) return null;
+    if (isNaN(new Date(date['value']).valueOf())) return null;
     const t = date['value'];
     parsedTime = formatDatetime(t, t, addHours(t, duration));
   } else if (date['type'] === 'interval' && date['from'] && date['to']) {
@@ -43,7 +43,7 @@ export const extractBookingTimes = (date: JSON): IParsedDate | null => {
     duration = Math.max(Math.min(differenceInHours(tTo, tFrom), 2), 1);
     tTo = addHours(tFrom, duration);
     parsedTime = formatDatetime(tFrom, tFrom, tTo);
-  }
+  } else return null;
   return parsedTime;
 }
 
