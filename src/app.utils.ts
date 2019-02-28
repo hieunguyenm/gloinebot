@@ -14,6 +14,12 @@ interface IParsedDate {
   end: number;
 };
 
+interface IMessengerButton {
+  type: string;
+  url: string;
+  title: string;
+}
+
 export const getSenderID = (data: JSON): string => data['entry'][0]['messaging'][0]['sender']['id'];
 
 export const hasSticker = (data: JSON): boolean => data['entry'][0]['messaging'][0]['message']['sticker_id'];
@@ -155,26 +161,26 @@ const respondConfirm = (id: string, room: number, start: number, end: number, _d
     ].join(''));
 };
 
-const split = (list: any, size: number) =>
-  list.reduce((acc, curr, i, self) => {
-    if (!(i % size)) {
-      return [...acc, self.slice(i, i + size)];
-    }
-    return acc;
-  }, []);
+const split = <T>(list: T[], size: number): T[][] =>
+  list.reduce((acc, _, i, self) =>
+    !(i % size) ?
+      [...acc, self.slice(i, i + size)] :
+      acc,
+    []);
 
-const generateButtonSets = (rooms: number[], start: number, end: number, date: string): number[][] => {
-  const roomButtons = rooms.map(room => ({
-    type: 'web_url',
-    url: generateConfirmURL(room, start, end, date),
-    title: `Room ${room}`,
-  }));
-  return split(roomButtons, 3);
-};
+const generateButtonSets =
+  (rooms: number[], start: number, end: number, date: string): IMessengerButton[][] => {
+    const roomButtons = rooms.map(room => ({
+      type: 'web_url',
+      url: generateConfirmURL(room, start, end, date),
+      title: `Book room ${room}`,
+    }));
+    return split(roomButtons, 3);
+  };
 
 const respondButtonTemplate = async (id: string, rooms: number[], start: number, end: number, date: string) => {
-  const buttons = generateButtonSets(rooms, start, end, date);
-  for (let e of buttons) {
+  const buttonSets = generateButtonSets(rooms, start, end, date);
+  for (let e of buttonSets) {
     await axios.post(apiURL(), {
       recipient: { id },
       message: {
@@ -187,8 +193,7 @@ const respondButtonTemplate = async (id: string, rooms: number[], start: number,
           },
         },
       },
-    })
-      .catch(e => console.log(`Failed to send response to user ${id}: ${e}`))
+    }).catch(e => console.log(`Failed to send response to user ${id}: ${e}`))
   }
 };
 
@@ -197,5 +202,4 @@ const respond = (id: string, msg: string) =>
     messaging_type: 'RESPONSE',
     recipient: { id: id },
     message: { text: msg }
-  })
-    .catch(() => console.log(`Failed to send response to user ${id}`));
+  }).catch(e => console.log(`Failed to send response to user ${id}: ${e}`));
