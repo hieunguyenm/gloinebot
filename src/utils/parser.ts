@@ -5,7 +5,10 @@ import {
   differenceInHours,
   format,
   parse,
-  subHours
+  subHours,
+  setHours,
+  isBefore,
+  startOfHour,
 } from 'date-fns';
 
 import { getMessage } from './extractor';
@@ -44,7 +47,7 @@ export const extractBookingTimes = (date: JSON): IParsedDate | null => {
     tTo = addHours(tFrom, duration);
     parsedTime = formatDatetime(tFrom, tFrom, tTo);
   } else return null;
-  return parsedTime;
+  return isBefore(toDateObj(parsedTime), startOfHour(Date.now())) ? null : parsedTime;
 }
 
 export const filterOccupied = async (date: string, start: number): Promise<number[]> =>
@@ -67,6 +70,9 @@ export const formatDatetime = (dateTime: Date, startTime: Date, endTime: Date): 
     end: parseInt(format(endTime, 'HH'))
   };
 }
+
+const toDateObj = (bookingDate: IParsedDate): Date =>
+  setHours(parse(bookingDate.date), bookingDate.start);
 
 export const parseRoomInfo = (d: JSON): any => {
   const interval = d['time'].split('-');
