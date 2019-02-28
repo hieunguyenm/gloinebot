@@ -14,7 +14,7 @@ export const iterateRequest =
     let badRequest: boolean;
     for (let i in datetimes) {
       let times = extractBookingTimes(datetimes[i]);
-      badRequest = !times;
+      if (!times) { badRequest = true; break; }
       let rooms = await filterOccupied(times.date, times.start)
       if (rooms.length > 0) { bookRoom(id, rooms, wanted, times.date, times.start, times.end); return true; }
     }
