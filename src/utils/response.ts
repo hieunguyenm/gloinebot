@@ -58,6 +58,9 @@ export const respondButtonTemplate = async (id: string, rooms: number[], start: 
   }
 };
 
+export const respondBadRequest = (id: string) =>
+  respond(id, 'I did not recognise the booking interval in your request, please try again!')
+
 export const respond = (id: string, msg: string) =>
   axios.post(apiURL(), {
     messaging_type: 'RESPONSE',

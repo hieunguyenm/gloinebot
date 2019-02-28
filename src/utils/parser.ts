@@ -29,12 +29,13 @@ export const extractRoomWanted = (data: JSON): number | null => {
   return (wanted && wanted > 0 && wanted < 10) ? wanted : null;
 };
 
-export const extractBookingTimes = (date: JSON): IParsedDate => {
+export const extractBookingTimes = (date: JSON): IParsedDate | null => {
   let parsedTime: IParsedDate, duration = 1;
   if (date['type'] === 'value') {
+    if (!isNaN(new Date(date['value']).valueOf())) return null;
     const t = date['value'];
     parsedTime = formatDatetime(t, t, addHours(t, duration));
-  } else if (date['type'] === 'interval') {
+  } else if (date['type'] === 'interval' && date['from'] && date['to']) {
     const tFrom = parse(date['from']['value']);
 
     // Subtract 1 hour because Messenger NLP says 2pm-5pm (3 hours) for messages like "2pm for 2 hours".
