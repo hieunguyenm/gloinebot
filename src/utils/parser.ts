@@ -40,8 +40,8 @@ export const extractBookingTimes = (date: JSON): IParsedDate | null => {
     parsedTime = formatDatetime(t, t, addHours(t, duration));
   } else if (date['type'] === 'interval' && date['from'] && date['to']) {
     const tFrom = parse(date['from']['value']);
-
-    // Subtract 1 hour because Messenger NLP says 2pm-5pm (3 hours) for messages like "2pm for 2 hours".
+    // Subtract 1 hour because Messenger NLP says 2pm-5pm (3 hours) 
+    // for messages like "2pm for 2 hours".
     let tTo = subHours(parse(date['to']['value']), 1);
     duration = Math.max(Math.min(differenceInHours(tTo, tFrom), 2), 1);
     tTo = addHours(tFrom, duration);
@@ -50,13 +50,14 @@ export const extractBookingTimes = (date: JSON): IParsedDate | null => {
   return isBefore(toDateObj(parsedTime), startOfHour(Date.now())) ? null : parsedTime;
 }
 
-export const filterOccupied = async (date: string, start: number): Promise<number[]> =>
+export const filterOccupied = async (date: string, start: number, end: number): Promise<number[]> =>
   axios.get(GLASSROOM_API)
     .then(res => {
       if (date in res.data) return ALL_ROOMS.filter(roomIndex => {
         return res.data[date].every((r: any) => {
           const roomInfo = parseRoomInfo(r);
-          return !(roomInfo.room === roomIndex && isOccupied(start, roomInfo.start, roomInfo.end));
+          return !(roomInfo.room === roomIndex &&
+            isOccupied(start, end, roomInfo.start, roomInfo.end));
         });
       });
       return ALL_ROOMS;

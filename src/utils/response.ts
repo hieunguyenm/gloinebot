@@ -10,7 +10,8 @@ import {
   generateConfirmURL,
 } from './generator';
 
-export const respondNone = (id: string) => respond(id, 'Sorry, there are no rooms available at this time.');
+export const respondNone = (id: string) =>
+  respond(id, 'Sorry, there are no rooms available at this time.');
 
 export const respondUnknown = (id: string) => respond(id,
   [
@@ -29,34 +30,36 @@ export const respondAlternative =
     respondButtonTemplate(id, rooms, start, end, date);
   };
 
-export const respondConfirm = (id: string, room: number, start: number, end: number, _date: string) => {
-  respond(id,
-    [
-      `Room ${room}, `,
-      `${_date} @ ${start}:00-${end}:00\n`,
-      `${generateConfirmURL(room, start, end, _date)}\n\n`,
-      `Click link to confirm booking.`
-    ].join(''));
-};
+export const respondConfirm =
+  (id: string, room: number, start: number, end: number, _date: string) => {
+    respond(id,
+      [
+        `Room ${room}, `,
+        `${_date} @ ${start}:00-${end}:00\n`,
+        `${generateConfirmURL(room, start, end, _date)}\n\n`,
+        `Click link to confirm booking.`
+      ].join(''));
+  };
 
-export const respondButtonTemplate = async (id: string, rooms: number[], start: number, end: number, date: string) => {
-  const buttonSets = generateButtonSets(rooms, start, end, date);
-  for (let e of buttonSets) {
-    await axios.post(apiURL(), {
-      recipient: { id },
-      message: {
-        attachment: {
-          type: 'template',
-          payload: {
-            template_type: 'button',
-            text: `${date} @ ${start}:00-${end}:00`,
-            buttons: e,
+export const respondButtonTemplate =
+  async (id: string, rooms: number[], start: number, end: number, date: string) => {
+    const buttonSets = generateButtonSets(rooms, start, end, date);
+    for (let e of buttonSets) {
+      await axios.post(apiURL(), {
+        recipient: { id },
+        message: {
+          attachment: {
+            type: 'template',
+            payload: {
+              template_type: 'button',
+              text: `${date} @ ${start}:00-${end}:00`,
+              buttons: e,
+            },
           },
         },
-      },
-    }).catch(e => console.log(`Failed to send response to user ${id}: ${e}`))
-  }
-};
+      }).catch(e => console.log(`Failed to send response to user ${id}: ${e}`))
+    }
+  };
 
 export const respondBadRequest = (id: string) =>
   respond(id, [

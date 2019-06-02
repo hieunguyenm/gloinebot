@@ -16,7 +16,8 @@ import {
 @Injectable()
 export class AppService {
   verify(req: any): string {
-    if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === process.env.APP_TOKEN) {
+    if (req.query['hub.mode'] === 'subscribe' &&
+      req.query['hub.verify_token'] === process.env.APP_TOKEN) {
       console.log('Webhook challenge success.')
       return req.query['hub.challenge'];
     }
