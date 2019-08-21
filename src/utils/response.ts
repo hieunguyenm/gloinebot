@@ -45,7 +45,7 @@ export const respondButtonTemplate =
   async (id: string, rooms: number[], start: number, end: number, date: string) => {
     const buttonSets = generateButtonSets(rooms, start, end, date);
     for (let e of buttonSets) {
-      await axios.post(apiURL(), {
+      await axios.post(apiURL(process.env.PAGE_ACCESS_TOKEN), {
         recipient: { id },
         message: {
           attachment: {
@@ -68,7 +68,7 @@ export const respondBadRequest = (id: string) =>
   ].join(''));
 
 export const respond = (id: string, msg: string) =>
-  axios.post(apiURL(), {
+  axios.post(apiURL(process.env.PAGE_ACCESS_TOKEN), {
     messaging_type: 'RESPONSE',
     recipient: { id },
     message: { text: msg }
