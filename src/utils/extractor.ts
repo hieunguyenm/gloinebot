@@ -1,4 +1,5 @@
-export const getSenderID = (data: JSON): string => data['entry'][0]['messaging'][0]['sender']['id'];
+export const getSenderID = (data: JSON): string =>
+  data['entry'][0]['messaging'][0]['sender']['id'];
 
 export const hasSticker = (data: JSON): boolean =>
   data['entry'][0]['messaging'][0]['message']['sticker_id'];
