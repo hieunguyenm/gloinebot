@@ -11,6 +11,7 @@ import {
 import {
   respondNone,
   respondUnknown,
+  respond,
 } from './utils/response';
 
 @Injectable()
@@ -28,6 +29,8 @@ export class AppService {
 
   processMessage(body: JSON) {
     const id = getSenderID(body);
+    respond(id, 'Looking for available rooms...');
+
     const datetimes = getDatetime(body);
     const wantedRoom = extractRoomWanted(body);
     if (datetimes) iterateRequest(datetimes, id, wantedRoom)
