@@ -29,10 +29,9 @@ export class AppService {
 
   processMessage(body: JSON) {
     const id = getSenderID(body);
-    respond(id, 'Looking for available rooms...');
-
     const datetimes = getDatetime(body);
     const wantedRoom = extractRoomWanted(body);
+    
     if (datetimes) iterateRequest(datetimes, id, wantedRoom)
       .then(successful => { if (!successful) respondNone(id) });
     else if (!hasSticker(body)) respondUnknown(getSenderID(body));

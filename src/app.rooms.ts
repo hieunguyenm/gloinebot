@@ -4,6 +4,7 @@ import {
 } from './utils/parser';
 
 import {
+  respond,
   respondAlternative,
   respondBadRequest,
   respondButtonTemplate,
@@ -15,6 +16,8 @@ export const iterateRequest =
     for (let i in datetimes) {
       let times = extractBookingTimes(datetimes[i]);
       if (!times) { badRequest = true; break; }
+
+      respond(id, 'Looking for available rooms...');
       let rooms = await filterOccupied(times.date, times.start, times.end);
       if (rooms.length > 0) {
         bookRoom(id, rooms, wanted, times.date, times.start, times.end);
