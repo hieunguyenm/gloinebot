@@ -35,8 +35,8 @@ export class AppService {
     const name = await getUserName(id);
     console.log([
       `-- ID ${id}`,
-      ` ${name ? '(' + name + ')' : ""}`,
-      `: "${getMessage(body)}"`,
+      ` ${name ? '(' + name + ')' : ''}`,
+      `: '${getMessage(body)}'`,
     ].join(''));
 
     if (datetimes) iterateRequest(datetimes, id, wantedRoom)
