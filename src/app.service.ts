@@ -28,11 +28,11 @@ export class AppService {
     return '';
   }
 
-  processMessage(body: JSON) {
+  async processMessage(body: JSON) {
     const id = getSenderID(body);
     const datetimes = getDatetime(body);
     const wantedRoom = extractRoomWanted(body);
-    const name = getUserName(id);
+    const name = await getUserName(id);
     console.log([
       `-- ID ${id}`,
       ` ${name ? name : ""}`,
