@@ -1,6 +1,7 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { iterateRequest } from './app.rooms';
 import { extractRoomWanted } from './utils/parser';
+import { getUserName } from './utils/helper';
 
 import {
   getDatetime,
@@ -12,7 +13,6 @@ import {
 import {
   respondNone,
   respondUnknown,
-  respond,
 } from './utils/response';
 
 @Injectable()
@@ -32,7 +32,12 @@ export class AppService {
     const id = getSenderID(body);
     const datetimes = getDatetime(body);
     const wantedRoom = extractRoomWanted(body);
-    console.log(`-- ID ${id}: "${getMessage(body)}"`);
+    const name = getUserName(id);
+    console.log([
+      `-- ID ${id}`,
+      ` ${name ? name : ""}`,
+      `: "${getMessage(body)}"`,
+    ].join(''));
 
     if (datetimes) iterateRequest(datetimes, id, wantedRoom)
       .then(successful => { if (!successful) respondNone(id) });
