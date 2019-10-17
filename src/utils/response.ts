@@ -28,7 +28,7 @@ export const respondAlternative = (req: IBookRequest) => {
     `Room ${req.want} is not available for this time.`,
     `These other rooms are available:`,
   ].join('\n'));
-  respondButtonTemplate(req.id, req.rooms, req.start, req.end, req.date);
+  respondButtonTemplate(req);
 };
 
 export const respondConfirm =
@@ -42,25 +42,26 @@ export const respondConfirm =
       ].join(''));
   };
 
-export const respondButtonTemplate =
-  async (id: string, rooms: number[], start: number, end: number, date: string) => {
-    const buttonSets = generateButtonSets(rooms, start, end, date);
-    for (let e of buttonSets) {
-      await axios.post(apiURL(process.env.PAGE_ACCESS_TOKEN), {
-        recipient: { id },
-        message: {
-          attachment: {
-            type: 'template',
-            payload: {
-              template_type: 'button',
-              text: `${date} @ ${start}:00-${end}:00`,
-              buttons: e,
-            },
+export const respondButtonTemplate = async (req: IBookRequest) => {
+  const buttonSets =
+    generateButtonSets(req.rooms, req.start, req.end, req.date);
+  for (let e of buttonSets) {
+    await axios.post(apiURL(process.env.PAGE_ACCESS_TOKEN), {
+      recipient: { id: req.id },
+      message: {
+        attachment: {
+          type: 'template',
+          payload: {
+            template_type: 'button',
+            text: `${req.date} @ ${req.start}:00-${req.end}:00`,
+            buttons: e,
           },
         },
-      }).catch(e => console.log(`Failed to send response to user ${id}: ${e}`))
-    }
-  };
+      },
+    }).catch(e =>
+      console.log(`Failed to send response to user ${req.id}: ${e}`));
+  }
+};
 
 export const respondBadRequest = (id: string) =>
   respond(id, [

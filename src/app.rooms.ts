@@ -47,6 +47,5 @@ export const iterateRequest =
 const bookRoom = (req: IBookRequest) => {
   if (req.want !== null && req.rooms.every(e => e !== req.want))
     respondAlternative(req);
-  else respondButtonTemplate(req.id, req.want ? [req.want] : req.rooms,
-    req.start, req.end, req.date);
+  else respondButtonTemplate(req);
 };
