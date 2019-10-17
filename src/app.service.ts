@@ -6,6 +6,7 @@ import {
   getDatetime,
   getSenderID,
   hasSticker,
+  getMessage,
 } from './utils/extractor';
 
 import {
@@ -31,7 +32,8 @@ export class AppService {
     const id = getSenderID(body);
     const datetimes = getDatetime(body);
     const wantedRoom = extractRoomWanted(body);
-    
+    console.log(`-- ID ${id}: "${getMessage(body)}"`);
+
     if (datetimes) iterateRequest(datetimes, id, wantedRoom)
       .then(successful => { if (!successful) respondNone(id) });
     else if (!hasSticker(body)) respondUnknown(getSenderID(body));
