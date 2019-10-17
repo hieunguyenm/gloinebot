@@ -10,6 +10,15 @@ import {
   respondButtonTemplate,
 } from './utils/response';
 
+export interface IBookRequest {
+  id: string;
+  rooms: number[];
+  want: number | null;
+  date: string;
+  start: number;
+  end: number;
+};
+
 export const iterateRequest =
   async (datetimes: JSON, id: string, wanted: number): Promise<boolean> => {
     let badRequest: boolean;
@@ -20,7 +29,14 @@ export const iterateRequest =
       respond(id, 'Looking for available rooms...');
       let rooms = await filterOccupied(times.date, times.start, times.end);
       if (rooms.length > 0) {
-        bookRoom(id, rooms, wanted, times.date, times.start, times.end);
+        bookRoom({
+          id: id,
+          rooms: rooms,
+          want: wanted,
+          date: times.date,
+          start: times.start,
+          end: times.end,
+        });
         return true;
       }
     }
@@ -28,9 +44,9 @@ export const iterateRequest =
     return false;
   };
 
-const bookRoom =
-  (id: string, rooms: number[], want: number | null, date: string, start: number, end: number) => {
-    if (want !== null && rooms.every(e => e !== want))
-      respondAlternative(id, want, rooms, start, end, date);
-    else respondButtonTemplate(id, want ? [want] : rooms, start, end, date);
-  };
+const bookRoom = (req: IBookRequest) => {
+  if (req.want !== null && req.rooms.every(e => e !== req.want))
+    respondAlternative(req);
+  else respondButtonTemplate(req.id, req.want ? [req.want] : req.rooms,
+    req.start, req.end, req.date);
+};

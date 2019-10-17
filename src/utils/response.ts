@@ -10,6 +10,8 @@ import {
   generateConfirmURL,
 } from './generator';
 
+import { IBookRequest } from '../app.rooms';
+
 export const respondNone = (id: string) =>
   respond(id, 'Sorry, there are no rooms available at this time.');
 
@@ -21,14 +23,13 @@ export const respondUnknown = (id: string) => respond(id,
   ].join('\n')
 );
 
-export const respondAlternative =
-  (id: string, wanted: number, rooms: number[], start: number, end: number, date: string) => {
-    respond(id, [
-      `Room ${wanted} is not available for this time.`,
-      `These other rooms are available:`,
-    ].join('\n'));
-    respondButtonTemplate(id, rooms, start, end, date);
-  };
+export const respondAlternative = (req: IBookRequest) => {
+  respond(req.id, [
+    `Room ${req.want} is not available for this time.`,
+    `These other rooms are available:`,
+  ].join('\n'));
+  respondButtonTemplate(req.id, req.rooms, req.start, req.end, req.date);
+};
 
 export const respondConfirm =
   (id: string, room: number, start: number, end: number, _date: string) => {
