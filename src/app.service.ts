@@ -36,7 +36,7 @@ export class AppService {
     console.log([
       `-- ID ${id}`,
       ` ${name ? '(' + name + ')' : ''}`,
-      `: '${getMessage(body)}'`,
+      `: "${getMessage(body)}"`,
     ].join(''));
 
     if (datetimes) iterateRequest(datetimes, id, wantedRoom)
