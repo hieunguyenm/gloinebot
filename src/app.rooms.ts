@@ -1,3 +1,6 @@
+import { getMessage } from './utils/extractor';
+import { ONE_HOUR_REGEX } from './utils/constants';
+
 import {
   extractBookingTimes,
   filterOccupied,
@@ -20,11 +23,13 @@ export interface IBookRequest {
 };
 
 export const iterateRequest =
-  async (datetimes: JSON, id: string, wanted: number): Promise<boolean> => {
+  async (msg: string, dt: JSON, id: string, wanted: number):
+    Promise<boolean> => {
     let badRequest: boolean;
-    for (let i in datetimes) {
-      let times = extractBookingTimes(datetimes[i]);
+    for (let i in dt) {
+      let times = extractBookingTimes(dt[i]);
       if (!times) { badRequest = true; break; }
+      if (msg.match(ONE_HOUR_REGEX)) times.end--;
 
       respond(id, 'Looking for available rooms...');
       let rooms = await filterOccupied(times.date, times.start, times.end);

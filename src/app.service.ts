@@ -39,8 +39,9 @@ export class AppService {
       `: "${getMessage(body)}"`,
     ].join(''));
 
-    if (datetimes) iterateRequest(datetimes, id, wantedRoom)
-      .then(successful => { if (!successful) respondNone(id) });
+    if (datetimes)
+      iterateRequest(getMessage(body), datetimes, id, wantedRoom)
+        .then(successful => { if (!successful) respondNone(id) });
     else if (!hasSticker(body)) respondUnknown(getSenderID(body));
   }
 }
