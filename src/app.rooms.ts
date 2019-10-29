@@ -31,7 +31,7 @@ export const iterateRequest =
       if (!times) { badRequest = true; break; }
 
       log(`NLP ${id}: ${JSON.stringify(times, null, 2)}`);
-      if (msg.match(ONE_HOUR_REGEX)) {
+      if (msg.match(ONE_HOUR_REGEX) && times.end - times.start > 1) {
         times.end--;
         log(`Modified NLP ${id}: ${JSON.stringify(times, null, 2)}`);
       }
