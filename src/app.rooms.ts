@@ -1,4 +1,5 @@
 import { ONE_HOUR_REGEX } from './utils/constants';
+import { log } from './utils/helper';
 
 import {
   extractBookingTimes,
@@ -29,10 +30,10 @@ export const iterateRequest =
       let times = extractBookingTimes(dt[i]);
       if (!times) { badRequest = true; break; }
 
-      console.log(`* NLP ${id}: ${JSON.stringify(times, null, 2)}`);
+      log(`NLP ${id}: ${JSON.stringify(times, null, 2)}`);
       if (msg.match(ONE_HOUR_REGEX)) {
         times.end--;
-        console.log(`* Modified NLP ${id}: ${JSON.stringify(times, null, 2)}`);
+        log(`Modified NLP ${id}: ${JSON.stringify(times, null, 2)}`);
       }
 
       respond(id, 'Looking for available rooms...');

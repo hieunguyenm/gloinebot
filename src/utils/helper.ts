@@ -23,3 +23,6 @@ export const getUserName = async (id: string): Promise<string | null> => {
     return `${res.data['first_name']} ${res.data['last_name']}`;
   } catch (e) { return null; }
 }
+
+export const log = (msg: string) =>
+  console.log(`${new Date().toUTCString()} -- ${msg}`);

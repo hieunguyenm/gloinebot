@@ -1,7 +1,11 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { iterateRequest } from './app.rooms';
 import { extractRoomWanted } from './utils/parser';
-import { getUserName } from './utils/helper';
+
+import {
+  getUserName,
+  log,
+} from './utils/helper';
 
 import {
   getDatetime,
@@ -33,11 +37,7 @@ export class AppService {
     const datetimes = getDatetime(body);
     const wantedRoom = extractRoomWanted(body);
     const name = await getUserName(id);
-    console.log([
-      `-- ID ${id}`,
-      ` ${name ? '(' + name + ')' : ''}`,
-      `: "${getMessage(body)}"`,
-    ].join(''));
+    log(`ID ${id} ${name ? '(' + name + ')' : ''}: "${getMessage(body)}"`);
 
     if (datetimes)
       iterateRequest(getMessage(body), datetimes, id, wantedRoom)
