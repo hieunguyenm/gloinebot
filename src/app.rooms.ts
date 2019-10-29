@@ -1,4 +1,3 @@
-import { getMessage } from './utils/extractor';
 import { ONE_HOUR_REGEX } from './utils/constants';
 
 import {
@@ -29,7 +28,12 @@ export const iterateRequest =
     for (let i in dt) {
       let times = extractBookingTimes(dt[i]);
       if (!times) { badRequest = true; break; }
-      if (msg.match(ONE_HOUR_REGEX)) times.end--;
+
+      console.log(`* NLP ${id}: ${JSON.stringify(times, null, 2)}`);
+      if (msg.match(ONE_HOUR_REGEX)) {
+        times.end--;
+        console.log(`* Modified NLP ${id}: ${JSON.stringify(times, null, 2)}`);
+      }
 
       respond(id, 'Looking for available rooms...');
       let rooms = await filterOccupied(times.date, times.start, times.end);
