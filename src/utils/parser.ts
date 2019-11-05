@@ -10,14 +10,18 @@ import {
   startOfHour,
 } from 'date-fns';
 
-import { getMessage } from './extractor';
-import { isOccupied } from './helper';
+import {
+  isOccupied,
+  log
+} from './helper';
 
 import {
   ALL_ROOMS,
   ROOM_REGEX,
   GLASSROOM_API,
 } from './constants';
+
+import { getMessage } from './extractor';
 
 interface IParsedDate {
   date: string;
@@ -39,10 +43,10 @@ export const extractBookingTimes = (date: JSON): IParsedDate | null => {
     parsedTime = formatDatetime(t, t, addHours(t, duration));
   } else if (date['type'] === 'interval' && date['from'] && date['to']) {
     const tFrom = parse(date['from']['value']);
-    // Subtract 1 hour because Messenger NLP says 2pm-5pm (3 hours) 
-    // for messages like "2pm for 2 hours".
-    // let tTo = subHours(parse(date['to']['value']), 1);
     let tTo = parse(date['to']['value']);
+
+    log(`Unmodified NLP interval: from: ${tFrom}, to: ${tTo}`);
+
     duration = Math.max(Math.min(differenceInHours(tTo, tFrom), 2), 1);
     tTo = addHours(tFrom, duration);
     parsedTime = formatDatetime(tFrom, tFrom, tTo);
