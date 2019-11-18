@@ -1,7 +1,7 @@
 module.exports = {
   apps : [{
     name: 'gloinebot',
-    script: '/usr/bin/yarn',
+    script: '/home/gloinebot/.yarn/bin/pm2',
     args: 'run start:prod',
   }]
 };
