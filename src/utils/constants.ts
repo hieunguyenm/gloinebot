@@ -2,6 +2,8 @@ export const ROOM_REGEX = /room\s?(number)?(no\.?)?\s?(\d)/;
 
 export const ONE_HOUR_REGEX = /(for\s)?((1|one)\s?(hour|h))/;
 
+export const RETRIEVE_BOOKING_REGEX = /^retrieve$/;
+
 export const CONFIRM_URL = 'https://confirm-gloinebot.now.sh';
 
 export const HELP_URL = 'https://gloinebot.sixth.io';

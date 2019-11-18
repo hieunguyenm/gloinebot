@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import {
+  addDays,
   addHours,
   differenceInHours,
   format,
@@ -82,3 +83,28 @@ export const parseRoomInfo = (d: JSON): any => {
   const roomNumber = d['room'];
   return { start: bookedStart, end: bookedEnd, room: roomNumber };
 };
+
+export const retrieveBookings = async (username: string): Promise<any> => {
+  const currentDate = new Date();
+  const currentHour = new Date().getHours();
+  try {
+    const res = await axios.get(GLASSROOM_API);
+    const bookings = res.data;
+
+    for (let i = 0 ; i < 8; ++i) {
+      const today = format(addDays(currentDate, i), 'D MMM YYYY');
+      const todaysBookings = bookings[today] || [];
+
+      for (const b of todaysBookings) {
+        const booking = parseRoomInfo(b);
+        if ((i === 0 && currentHour <= booking.start || i > 0) && username === b.name) {
+          return { ...booking, date: today };
+        }
+      }
+    }
+  } catch(e) {
+    console.log(e);
+    return null;
+  }
+  return null;
+}

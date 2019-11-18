@@ -1,6 +1,9 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { iterateRequest } from './app.rooms';
-import { extractRoomWanted } from './utils/parser';
+import {
+  extractRoomWanted,
+  retrieveBookings
+} from './utils/parser';
 
 import {
   getUserName,
@@ -12,9 +15,11 @@ import {
   getSenderID,
   hasSticker,
   getMessage,
+  askedForBooking,
 } from './utils/extractor';
 
 import {
+  respond,
   respondNone,
   respondUnknown,
 } from './utils/response';
@@ -36,10 +41,26 @@ export class AppService {
     const id = getSenderID(body);
     const datetimes = getDatetime(body);
     const wantedRoom = extractRoomWanted(body);
+    const wantedBooking = askedForBooking(body);
     const name = await getUserName(id);
     log(`ID ${id} ${name ? '(' + name + ')' : ''}: "${getMessage(body)}"`);
 
-    if (datetimes)
+    if (wantedBooking) {
+      const exist = await retrieveBookings(name);
+      if (!exist) {
+        const failMessage =
+          [ 'Sorry, I couldn\'t find an existing booking for you.',
+            'Please note: for this feature to work, make sure your name with SCSS is the same as on Facebook.'
+          ].join('\n');
+        respond(id, failMessage);
+      } else {
+        const msg =
+          [ `You have a booking on ${exist.date} @ ${exist.start}:00-${exist.end}:00`,
+            `for room ${exist.room}.`,
+          ].join(' ');
+        respond(id, msg);
+      }
+    } else if (datetimes)
       iterateRequest(getMessage(body), datetimes, id, wantedRoom)
         .then(successful => { if (!successful) respondNone(id) });
     else if (!hasSticker(body)) respondUnknown(getSenderID(body));
