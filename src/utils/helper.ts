@@ -16,11 +16,11 @@ export const getUserName = async (id: string): Promise<string | null> => {
   try {
     const res = await axios.get([
       `https://graph.facebook.com/${id}`,
-      '?fields=first_name,last_name',
+      '?fields=name',
       `&access_token=${process.env.PAGE_ACCESS_TOKEN}`,
     ].join(''));
     if (res.data['error']) return null;
-    return `${res.data['first_name']} ${res.data['last_name']}`;
+    return res.data['name'];
   } catch (e) { return null; }
 }
 
