@@ -1,5 +1,6 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { iterateRequest } from './app.rooms';
+
 import {
   extractRoomWanted,
   retrieveBookings
@@ -48,16 +49,18 @@ export class AppService {
     if (wantedBooking) {
       const exist = await retrieveBookings(name);
       if (!exist) {
-        const failMessage =
-          [ 'Sorry, I couldn\'t find an existing booking for you.',
-            'Please note: for this feature to work, make sure your name with SCSS is the same as on Facebook.'
-          ].join('\n');
+        const failMessage = [
+          `Sorry, I couldn't find an existing booking for you.\n`,
+          'Please note: for this feature to work, ',
+          'make sure your name with SCSS is the same as on Facebook.',
+        ].join('');
         respond(id, failMessage);
       } else {
-        const msg =
-          [ `You have a booking on ${exist.date} @ ${exist.start}:00-${exist.end}:00`,
-            `for room ${exist.room}.`,
-          ].join(' ');
+        const msg = [
+          `You have a booking on ${exist.date} @',
+          '${exist.start}:00-${exist.end}:00`,
+          `for room ${exist.room}.`,
+        ].join(' ');
         respond(id, msg);
       }
     } else if (datetimes)
