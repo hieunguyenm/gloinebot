@@ -4,6 +4,7 @@ import { log } from './utils/helper';
 import {
   extractBookingTimes,
   filterOccupied,
+  retrieveBookings,
 } from './utils/parser';
 
 import {
@@ -53,6 +54,25 @@ export const iterateRequest =
     if (badRequest) { respondBadRequest(id); return true; }
     return false;
   };
+
+export const findExistingBooking = async (id: string, name: string) => {
+  const exist = await retrieveBookings(name);
+  if (!exist) {
+    const failMessage = [
+      `Sorry, I couldn't find an existing booking for you.\n`,
+      'Please note: for this feature to work, ',
+      'make sure your name with SCSS is the same as on Facebook.',
+    ].join('');
+    respond(id, failMessage);
+  } else {
+    const msg = [
+      `You have a booking on ${exist.date} @`,
+      `${exist.start}:00-${exist.end}:00`,
+      `for room ${exist.room}.`,
+    ].join(' ');
+    respond(id, msg);
+  }
+};
 
 const bookRoom = (req: IBookRequest) => {
   if (req.want !== null && req.rooms.every(e => e !== req.want))
