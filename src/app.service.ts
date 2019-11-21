@@ -57,8 +57,8 @@ export class AppService {
         respond(id, failMessage);
       } else {
         const msg = [
-          `You have a booking on ${exist.date} @',
-          '${exist.start}:00-${exist.end}:00`,
+          `You have a booking on ${exist.date} @`,
+          `${exist.start}:00-${exist.end}:00`,
           `for room ${exist.room}.`,
         ].join(' ');
         respond(id, msg);
